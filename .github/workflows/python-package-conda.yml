@@ -30,8 +30,12 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        conda install pytest
-        # Debug: List test files
-        ls -la test*.py || echo "No test files found in root"
-        # Run tests explicitly
-        pytest test_ci.py -v || pytest --collect-only
+        # Install pytest if not already installed
+        conda install pytest -y
+        # Debug: Show current directory and test files
+        pwd
+        ls -la
+        echo "--- Test files: ---"
+        find . -name "test*.py" -type f
+        # Run tests with explicit path
+        python -m pytest test_ci.py -v
