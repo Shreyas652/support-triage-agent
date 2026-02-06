@@ -33,43 +33,43 @@ class TriageAgent:
         5. Execute actions (Workflow Tool)
         """
         print(f"\n{'='*60}")
-        print(f"🎫 Triaging Ticket: {ticket.get('ticket_id', 'UNKNOWN')}")
-        print(f"   Subject: {ticket.get('subject', 'No subject')}")
+        print(f"[TICKET] {ticket.get('ticket_id', 'UNKNOWN')}")
+        print(f"Subject: {ticket.get('subject', 'No subject')}")
         print(f"{'='*60}\n")
         
         # Step 1: Analyze Content
         analysis = self._analyze_content(ticket)
-        print(f"📝 Step 1: Content Analysis")
-        print(f"   Detected sentiment: {analysis['sentiment']}")
-        print(f"   Urgency indicators: {len(analysis['urgency_keywords'])}")
+        print(f"[STEP 1] Content Analysis")
+        print(f"  - Sentiment: {analysis['sentiment']}")
+        print(f"  - Urgency indicators: {len(analysis['urgency_keywords'])}")
         
         # Step 2: Search for Context (Search Tool)
         search_context = self._search_for_context(ticket, analysis)
-        print(f"\n🔍 Step 2: Search Tool - Found Context")
-        print(f"   Similar tickets: {len(search_context['similar_tickets'])}")
-        print(f"   KB articles: {len(search_context['kb_articles'])}")
-        print(f"   Customer history: {search_context['customer_history'].get('total_tickets', 0)} previous tickets")
+        print(f"\n[STEP 2] Search Tool - Context Discovery")
+        print(f"  - Similar tickets: {len(search_context['similar_tickets'])}")
+        print(f"  - KB articles: {len(search_context['kb_articles'])}")
+        print(f"  - Customer history: {search_context['customer_history'].get('total_tickets', 0)} previous tickets")
         
         # Step 3: Analyze with ES|QL (ES|QL Tool)
         esql_analysis = self._analyze_with_esql(ticket, analysis, search_context)
-        print(f"\n📊 Step 3: ES|QL Tool - Pattern Analysis")
-        print(f"   Calculated priority score: {esql_analysis['priority_score']}")
-        print(f"   Category confidence: {esql_analysis['category_confidence']:.1%}")
-        print(f"   Recommended team: {esql_analysis['recommended_team']}")
+        print(f"\n[STEP 3] ES|QL Tool - Pattern Analysis")
+        print(f"  - Priority score: {esql_analysis['priority_score']}")
+        print(f"  - Category confidence: {esql_analysis['category_confidence']:.1%}")
+        print(f"  - Recommended team: {esql_analysis['recommended_team']}")
         
         # Step 4: Make Decision (Reasoning)
         decision = self._make_decision(ticket, analysis, search_context, esql_analysis)
-        print(f"\n🧠 Step 4: Agent Decision")
-        print(f"   Category: {decision['category']}")
-        print(f"   Priority: {decision['priority']}")
-        print(f"   Assigned Team: {decision['assigned_team']}")
-        print(f"   Confidence: {decision['confidence']:.1%}")
+        print(f"\n[STEP 4] Triage Decision")
+        print(f"  - Category: {decision['category']}")
+        print(f"  - Priority: {decision['priority']}")
+        print(f"  - Assigned team: {decision['assigned_team']}")
+        print(f"  - Confidence: {decision['confidence']:.1%}")
         
         # Step 5: Execute Workflow (Workflow Tool)
         workflow_result = self._execute_workflow(ticket, decision, search_context)
-        print(f"\n⚙️  Step 5: Workflow Tool - Actions Executed")
+        print(f"\n[STEP 5] Workflow Tool - Actions Executed")
         for action in workflow_result['actions_taken']:
-            print(f"   ✓ {action}")
+            print(f"  + {action}")
         
         # Compile final result
         ticket_id = ticket.get("ticket_id", "UNKNOWN")
@@ -91,7 +91,7 @@ class TriageAgent:
         # Log agent action
         self._log_agent_action(ticket_id, decision, result)
         
-        print(f"\n✅ Triage Complete!")
+        print(f"\n[COMPLETE] Triage finished successfully")
         print(f"{'='*60}\n")
         
         return result
@@ -188,7 +188,7 @@ class TriageAgent:
                 for hit in response["hits"]["hits"]
             ]
         except Exception as e:
-            print(f"⚠️  Error searching similar tickets: {e}")
+            print(f"[WARNING] Error searching similar tickets: {e}")
             return []
     
     def _search_kb_articles(self, ticket: Dict[str, Any]) -> List[Dict]:
@@ -217,7 +217,7 @@ class TriageAgent:
                 for hit in response["hits"]["hits"]
             ]
         except Exception as e:
-            print(f"⚠️  Error searching KB: {e}")
+            print(f"[WARNING] Error searching KB: {e}")
             return []
     
     def _get_customer_history(self, customer_id: str) -> Dict:
@@ -247,7 +247,7 @@ class TriageAgent:
                 "past_tickets": past_tickets[:5]  # Last 5 tickets
             }
         except Exception as e:
-            print(f"⚠️  Error getting customer history: {e}")
+            print(f"[WARNING] Error getting customer history: {e}")
             return {
                 "customer_id": customer_id,
                 "plan": "free",
@@ -368,7 +368,7 @@ class TriageAgent:
             
             return workload
         except Exception as e:
-            print(f"⚠️  Error getting team workload: {e}")
+            print(f"[WARNING] Error getting team workload: {e}")
             return {}
     
     def _make_decision(self, ticket: Dict, analysis: Dict, 
@@ -437,7 +437,7 @@ class TriageAgent:
             else:
                 actions_taken.append("Skipped ticket update (no ticket ID)")
         except Exception as e:
-            print(f"⚠️  Error updating ticket: {e}")
+            print(f"[WARNING] Error updating ticket: {e}")
             actions_taken.append(f"Failed to update ticket: {e}")
         
         # Assign to team (simulated)
@@ -500,12 +500,12 @@ class TriageAgent:
                 body=action_doc
             )
         except Exception as e:
-            print(f"⚠️  Error logging action: {e}")
+            print(f"[WARNING] Error logging action: {e}")
 
 
 def main():
     """Demo the triage agent"""
-    print("🤖 Support Ticket Triage Agent - Demo\n")
+    print("Support Ticket Triage Agent\n")
     
     # Connect to Elasticsearch
     if os.getenv('ELASTICSEARCH_URL'):
@@ -538,7 +538,7 @@ def main():
     if not es.ping():
         raise ConnectionError("Failed to connect to Elasticsearch")
     
-    print("✅ Connected to Elasticsearch\n")
+    print("[INFO] Connected to Elasticsearch\n")
     
     # Create agent
     agent = TriageAgent(es)
@@ -568,7 +568,7 @@ def main():
     
     # Print summary
     print("\n" + "="*60)
-    print("📊 TRIAGE SUMMARY")
+    print("TRIAGE SUMMARY")
     print("="*60)
     
     for result in results:
@@ -578,11 +578,11 @@ def main():
         print(f"  Team: {result['triage_decision']['assigned_team']}")
         print(f"  Processing time: {result['processing_time_ms']}ms")
         if result['triage_decision']['needs_human_review']:
-            print(f"  ⚠️  Flagged for human review")
+            print(f"  [REVIEW REQUIRED] Flagged for human review")
     
     avg_time = sum(r['processing_time_ms'] for r in results) / len(results)
     print(f"\n Average processing time: {avg_time:.0f}ms")
-    print(f"\n✅ All tickets triaged successfully!")
+    print(f"\n[SUCCESS] All tickets triaged successfully!")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,66 @@
+{
+  "ticket_stats": {
+    "total_tickets": 500,
+    "by_status": {
+      "open": 226,
+      "in_progress": 167,
+      "resolved": 81,
+      "closed": 26
+    },
+    "by_priority": {
+      "low": 336,
+      "medium": 93,
+      "high": 43,
+      "critical": 28
+    },
+    "by_category": {
+      "feature": 147,
+      "account": 129,
+      "billing": 122,
+      "technical": 102
+    }
+  },
+  "agent_performance": {
+    "total_processed": 106,
+    "average_confidence": 0.879245283018868,
+    "by_action_type": {
+      "triage": 106
+    },
+    "flagged_for_review": 30,
+    "review_rate": 0.2830188679245283
+  },
+  "category_accuracy": {
+    "feature": 147,
+    "account": 129,
+    "billing": 122,
+    "technical": 102
+  },
+  "time_savings": {
+    "tickets_processed": 106,
+    "manual_time_per_ticket_sec": 150,
+    "agent_time_per_ticket_sec": 1.3,
+    "time_saved_seconds": 15762.2,
+    "time_saved_hours": 4.378388888888889,
+    "time_saved_percentage": 99.13333333333334,
+    "projected_full_dataset": {
+      "total_tickets": 500,
+      "manual_time_hours": 20.833333333333332,
+      "agent_time_hours": 0.18055555555555555,
+      "time_saved_hours": 20.65277777777778,
+      "time_saved_percentage": 99.13333333333333
+    }
+  },
+  "impact_metrics": {
+    "annual_time_saved_hours": 5163.194444444444,
+    "annual_cost_savings_usd": 180711.80555555556,
+    "response_time_improvement_hours": 4.75,
+    "response_time_improvement_percentage": 95.0,
+    "manual_error_rate": 15.0,
+    "agent_error_rate": 12.075471698113205,
+    "error_reduction_percentage": 19.496855345911964,
+    "agent_accuracy_percentage": 87.9245283018868,
+    "daily_tickets_processed": 500,
+    "annual_tickets_processed": 125000
+  },
+  "generated_at": "2026-02-05T18:12:52.879251"
+}
