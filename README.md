@@ -15,7 +15,7 @@ An autonomous AI agent that triages support tickets 99% faster than manual proce
 ### Key Features
 
 - **Multi-Step Reasoning**: Five-stage analysis pipeline (Analyze → Search → ES|QL → Decide → Workflow)
-- **Context-Aware Classification**: Leverages historical tickets, knowledge base articles, and customer data
+- **Context-Aware Classification**: Uses historical tickets, knowledge base articles, and customer data for informed decisions
 - **Intelligent Routing**: Team assignment based on ticket category, urgency, and workload balancing
 - **Audit Trail**: Complete action logging for compliance and quality assurance
 - **High Accuracy**: 95% classification accuracy with confidence scoring

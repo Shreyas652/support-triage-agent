@@ -10,11 +10,11 @@ Multi-step AI agent that triages 500+ daily support tickets in seconds using Ela
 
 ### The Problem
 
-Support teams are drowning in tickets. At a typical SaaS company, 200-500 support tickets arrive daily, each requiring manual triage: reading content, categorizing (technical, billing, account, feature request), setting priority (critical to low), and routing to the correct team. This process takes 2-3 minutes per ticket, consuming 16-25 hours of human time daily. Beyond the time cost, manual triage suffers from a 15% error rate—tickets get miscategorized, urgent issues wait hours in the wrong queue, and customers grow frustrated while teams burn out.
+Support teams are drowning in tickets. At a typical SaaS company, 200-500 support tickets arrive daily, each requiring manual triage: reading content, categorizing (technical, billing, account, feature request), setting priority (critical to low), and routing to the correct team. This process takes 2-3 minutes per ticket—that's 16-25 hours of human time every single day. Worse, manual triage has a 15% error rate. Tickets get miscategorized, urgent issues sit in the wrong queue for hours, and customers get frustrated while support teams burn out.
 
 ### The Solution
 
-I built an intelligent multi-step AI agent using Elasticsearch Agent Builder that completely automates support ticket triage. The agent doesn't just classify tickets—it reasons through five distinct steps:
+I built a multi-step AI agent using Elasticsearch Agent Builder that automates the entire triage process. The agent doesn't just classify tickets—it actually reasons through five distinct steps:
 
 **Step 1 - Content Analysis**: The agent analyzes ticket content for sentiment (positive, neutral, negative), urgency indicators, and key topics.
 
@@ -28,19 +28,19 @@ I built an intelligent multi-step AI agent using Elasticsearch Agent Builder tha
 
 ### Features Used
 
-The project leverages all three Elasticsearch Agent Builder tools:
+The project uses all three Elasticsearch Agent Builder tools:
 
 **Search Tool**: Implements vector similarity search to find contextually relevant past tickets even with different wording, searches the knowledge base for solution articles, and retrieves complete customer interaction history—all providing rich context for intelligent decisions.
 
 **ES|QL Tool**: The piped query language made complex analytics surprisingly elegant. I built dynamic priority scoring with conditional logic, aggregated patterns across categories, calculated team workload distribution, and analyzed sentiment trends—all with readable, maintainable queries.
 
-**Elastic Workflows**: Chains multiple automated actions seamlessly—updating Elasticsearch documents, routing tickets to teams, triggering notifications for critical issues, and maintaining comprehensive audit logs. Every action is tracked with timestamps and reasoning.
+**Elastic Workflows**: Chains multiple automated actions together—updating Elasticsearch documents, routing tickets to teams, triggering notifications for critical issues, and maintaining comprehensive audit logs. Every action is tracked with timestamps and reasoning.
 
 ### Features I Liked & Challenges
 
 **What I Loved:**
 
-1. **ES|QL's expressiveness**: The piped syntax for calculating weighted priority scores felt incredibly natural. Complex multi-factor analysis (urgency + sentiment + customer tier + history) in a readable format was a game-changer.
+1. **ES|QL's expressiveness**: The piped syntax for calculating weighted priority scores felt incredibly natural. Complex multi-factor analysis (urgency + sentiment + customer tier + history) became readable and maintainable—something that would've been a mess in traditional SQL.
 
 2. **Search accuracy**: Vector search consistently found relevant historical tickets even with completely different wording—demonstrating true semantic understanding, not just keyword matching.
 
