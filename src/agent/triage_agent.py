@@ -33,8 +33,8 @@ class TriageAgent:
         5. Execute actions (Workflow Tool)
         """
         print(f"\n{'='*60}")
-        print(f"🎫 Triaging Ticket: {ticket['ticket_id']}")
-        print(f"   Subject: {ticket['subject']}")
+        print(f"🎫 Triaging Ticket: {ticket.get('ticket_id', 'UNKNOWN')}")
+        print(f"   Subject: {ticket.get('subject', 'No subject')}")
         print(f"{'='*60}\n")
         
         # Step 1: Analyze Content
@@ -97,7 +97,10 @@ class TriageAgent:
     
     def _analyze_content(self, ticket: Dict[str, Any]) -> Dict[str, Any]:
         """Step 1: Analyze ticket content for sentiment and urgency"""
-        text = f"{ticket.get('subject', '')} {ticket.get('description', '')}".lower()
+        # Handle missing fields gracefully
+        subject = str(ticket.get('subject', ''))
+        description = str(ticket.get('description', ''))
+        text = f"{subject} {description}".lower()
         
         # Sentiment analysis
         negative_words = ['frustrated', 'angry', 'terrible', 'worst', 'unacceptable', 
