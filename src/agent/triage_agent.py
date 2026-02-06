@@ -72,8 +72,9 @@ class TriageAgent:
             print(f"   ✓ {action}")
         
         # Compile final result
+        ticket_id = ticket.get("ticket_id", "UNKNOWN")
         result = {
-            "ticket_id": ticket["ticket_id"],
+            "ticket_id": ticket_id,
             "original_status": ticket.get("status", "open"),
             "triage_decision": decision,
             "context": {
@@ -88,7 +89,7 @@ class TriageAgent:
         }
         
         # Log agent action
-        self._log_agent_action(ticket["ticket_id"], decision, result)
+        self._log_agent_action(ticket_id, decision, result)
         
         print(f"\n✅ Triage Complete!")
         print(f"{'='*60}\n")
@@ -414,22 +415,27 @@ class TriageAgent:
         """Step 5: Execute workflow actions"""
         actions_taken = []
         
+        ticket_id = ticket.get("ticket_id", "UNKNOWN")
+        
         # Update ticket in Elasticsearch
         try:
-            self.es.update(
-                index="support_tickets",
-                id=ticket["ticket_id"],
-                body={
-                    "doc": {
-                        "category": decision['category'],
-                        "priority": decision['priority'],
-                        "assigned_team": decision['assigned_team'],
-                        "status": "in_progress",
-                        "updated_at": datetime.now().isoformat()
+            if ticket_id != "UNKNOWN":
+                self.es.update(
+                    index="support_tickets",
+                    id=ticket_id,
+                    body={
+                        "doc": {
+                            "category": decision['category'],
+                            "priority": decision['priority'],
+                            "assigned_team": decision['assigned_team'],
+                            "status": "in_progress",
+                            "updated_at": datetime.now().isoformat()
+                        }
                     }
-                }
-            )
-            actions_taken.append(f"Updated ticket fields (category={decision['category']}, priority={decision['priority']})")
+                )
+                actions_taken.append(f"Updated ticket fields (category={decision['category']}, priority={decision['priority']})")
+            else:
+                actions_taken.append("Skipped ticket update (no ticket ID)")
         except Exception as e:
             print(f"⚠️  Error updating ticket: {e}")
             actions_taken.append(f"Failed to update ticket: {e}")
@@ -456,15 +462,16 @@ class TriageAgent:
     def _generate_response(self, ticket: Dict, context: Dict, decision: Dict) -> str:
         """Generate suggested response for the ticket"""
         kb_articles = context['kb_articles']
+        subject = ticket.get('subject', 'your issue')
         
         if kb_articles:
             article = kb_articles[0]
-            response = f"Thank you for contacting support. Based on your issue regarding '{ticket['subject']}', " \
+            response = f"Thank you for contacting support. Based on your issue regarding '{subject}', " \
                       f"we've categorized this as a {decision['category']} issue with {decision['priority']} priority. " \
                       f"\n\nYou might find this helpful: {article['title']} (Article {article['article_id']})" \
                       f"\n\nOur {decision['assigned_team']} team will review your ticket shortly."
         else:
-            response = f"Thank you for contacting support. We've received your ticket regarding '{ticket['subject']}'. " \
+            response = f"Thank you for contacting support. We've received your ticket regarding '{subject}'. " \
                       f"This has been categorized as a {decision['category']} issue with {decision['priority']} priority. " \
                       f"Our {decision['assigned_team']} team will get back to you soon."
         
