@@ -48,7 +48,7 @@ class TriageAgent:
         print(f"\n🔍 Step 2: Search Tool - Found Context")
         print(f"   Similar tickets: {len(search_context['similar_tickets'])}")
         print(f"   KB articles: {len(search_context['kb_articles'])}")
-        print(f"   Customer history: {search_context['customer_history']['total_tickets']} previous tickets")
+        print(f"   Customer history: {search_context['customer_history'].get('total_tickets', 0)} previous tickets")
         
         # Step 3: Analyze with ES|QL (ES|QL Tool)
         esql_analysis = self._analyze_with_esql(ticket, analysis, search_context)

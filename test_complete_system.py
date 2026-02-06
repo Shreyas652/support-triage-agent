@@ -79,6 +79,8 @@ class SystemTester:
         print("TEST 2: INDICES VALIDATION")
         print("="*60)
         
+        assert self.es is not None, "Elasticsearch client not initialized"
+        
         required_indices = ["support_tickets", "customers", "knowledge_base", "agent_actions"]
         all_exist = True
         
@@ -102,6 +104,8 @@ class SystemTester:
         print("\n" + "="*60)
         print("TEST 3: DATA QUALITY")
         print("="*60)
+        
+        assert self.es is not None, "Elasticsearch client not initialized"
         
         all_passed = True
         
@@ -158,6 +162,8 @@ class SystemTester:
         print("TEST 4: AGENT INITIALIZATION")
         print("="*60)
         
+        assert self.es is not None, "Elasticsearch client not initialized"
+        
         try:
             self.agent = TriageAgent(self.es)
             self.log_test("Agent Initialization", True, f"Agent '{self.agent.agent_name}' created")
@@ -171,6 +177,9 @@ class SystemTester:
         print("\n" + "="*60)
         print("TEST 5: SEARCH TOOL (Elasticsearch Search)")
         print("="*60)
+        
+        assert self.es is not None, "Elasticsearch client not initialized"
+        assert self.agent is not None, "Agent not initialized"
         
         try:
             # Get a sample ticket
@@ -207,6 +216,9 @@ class SystemTester:
         print("TEST 6: ES|QL TOOL (Analytics & Aggregations)")
         print("="*60)
         
+        assert self.es is not None, "Elasticsearch client not initialized"
+        assert self.agent is not None, "Agent not initialized"
+        
         try:
             # Test team workload aggregation
             workload = self.agent._get_team_workload()
@@ -236,6 +248,9 @@ class SystemTester:
         print("TEST 7: WORKFLOW TOOL (Updates & Actions)")
         print("="*60)
         
+        assert self.es is not None, "Elasticsearch client not initialized"
+        assert self.agent is not None, "Agent not initialized"
+        
         try:
             # Get a ticket and triage it
             response = self.es.search(index="support_tickets", body={"query": {"term": {"status": "open"}}, "size": 1})
@@ -256,6 +271,9 @@ class SystemTester:
             self.log_test("Workflow - Ticket Updated", is_updated,
                         f"Ticket status changed to {updated_ticket['_source']['status']}")
             
+            # Refresh indices to ensure audit trail is immediately searchable
+            self.es.indices.refresh(index="agent_actions")
+            
             # Verify action was logged
             action_response = self.es.search(
                 index="agent_actions",
@@ -274,6 +292,9 @@ class SystemTester:
         print("\n" + "="*60)
         print("TEST 8: MULTI-STEP REASONING (Full Pipeline)")
         print("="*60)
+        
+        assert self.es is not None, "Elasticsearch client not initialized"
+        assert self.agent is not None, "Agent not initialized"
         
         try:
             # Get open tickets
@@ -314,6 +335,9 @@ class SystemTester:
         print("TEST 9: PERFORMANCE METRICS")
         print("="*60)
         
+        assert self.es is not None, "Elasticsearch client not initialized"
+        assert self.agent is not None, "Agent not initialized"
+        
         try:
             # Test processing speed
             response = self.es.search(index="support_tickets", body={"query": {"term": {"status": "open"}}, "size": 5})
@@ -349,6 +373,8 @@ class SystemTester:
         print("\n" + "="*60)
         print("TEST 10: ERROR HANDLING")
         print("="*60)
+        
+        assert self.agent is not None, "Agent not initialized"
         
         try:
             # Test with incomplete ticket
@@ -420,9 +446,43 @@ def main():
     # Run all tests
     tests = [
         tester.test_elasticsearch_connection,
+    ]
+    
+    # Run connection test first
+    for test in tests:
+        try:
+            test()
+        except Exception as e:
+            print(f"❌ CRITICAL ERROR in {test.__name__}: {e}")
+    
+    # Validate Elasticsearch connection before continuing
+    if tester.es is None:
+        print("\n❌ CRITICAL: Elasticsearch connection failed - cannot continue tests")
+        print("All tests passed: 1/10 (10.0%)")
+        sys.exit(1)
+    
+    # Continue with remaining tests
+    tests = [
         tester.test_indices_exist,
         tester.test_data_quality,
         tester.test_agent_initialization,
+    ]
+    
+    # Run data validation and agent initialization
+    for test in tests:
+        try:
+            test()
+        except Exception as e:
+            print(f"❌ CRITICAL ERROR in {test.__name__}: {e}")
+    
+    # Validate agent initialization before continuing with agent tests
+    if tester.agent is None:
+        print("\n❌ CRITICAL: Agent initialization failed - cannot continue agent tests")
+        tester.print_summary()
+        sys.exit(1)
+    
+    # Continue with agent-dependent tests
+    tests = [
         tester.test_search_tool,
         tester.test_esql_tool,
         tester.test_workflow_tool,
