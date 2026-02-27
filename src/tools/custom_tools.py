@@ -1,22 +1,19 @@
 from typing import Dict, Any, List
 
 class CustomTool:
-    
+
     def __init__(self, elasticsearch_client):
-        
         self.es = elasticsearch_client
-        
+
     def execute(self, params: Dict[str, Any]) -> Any:
-        
         raise NotImplementedError("Subclasses must implement execute()")
 
 class ElasticsearchQueryTool(CustomTool):
-    
+
     def execute(self, params: Dict[str, Any]) -> List[Dict[str, Any]]:
-        
         index = params.get('index', 'default')
         query = params.get('query', {"match_all": {}})
-        
+
         try:
             response = self.es.search(
                 index=index,
@@ -29,38 +26,35 @@ class ElasticsearchQueryTool(CustomTool):
             return []
 
 class DataProcessorTool(CustomTool):
-    
+
     def execute(self, params: Dict[str, Any]) -> Any:
-        
         data = params.get('data', [])
         operation = params.get('operation', 'identity')
-        
+
         print(f"📋 TODO: Implement data processing for operation: {operation}")
         return data
 
 class TaskExecutorTool(CustomTool):
-    
+
     def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        
         task_type = params.get('task_type', 'unknown')
         config = params.get('config', {})
-        
+
         print(f"📋 TODO: Implement task executor for: {task_type}")
-        
+
         return {
-: "pending",
-: task_type,
-: "Task execution not yet implemented"
+            "status": "pending",
+            "task_type": task_type,
+            "message": "Task execution not yet implemented"
         }
 
 AVAILABLE_TOOLS = {
-: ElasticsearchQueryTool,
-: DataProcessorTool,
-: TaskExecutorTool
+    "elasticsearch_query": ElasticsearchQueryTool,
+    "data_processor": DataProcessorTool,
+    "task_executor": TaskExecutorTool
 }
 
 def get_tool(tool_name: str, elasticsearch_client) -> CustomTool:
-    
     tool_class = AVAILABLE_TOOLS.get(tool_name)
     if tool_class:
         return tool_class(elasticsearch_client)
