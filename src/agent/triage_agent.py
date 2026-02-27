@@ -79,11 +79,12 @@ class TriageAgent:
         text = f"{subject} {description}".lower()
 
         negative_words = ['frustrated', 'angry', 'terrible', 'worst', 'unacceptable',
-                         'disappointed', 'furious', 'immediately', 'urgent']
+                         'disappointed', 'furious', 'immediately', 'urgent', 'charged',
+                         'double charged', 'locked', 'blocked', 'denied', 'failed', 'wrong']
         positive_words = ['thanks', 'appreciate', 'great', 'love', 'excellent']
 
         negative_count = sum(1 for word in negative_words if word in text)
-        positive_count = sum(1 for word in positive_words if word in positive_words)
+        positive_count = sum(1 for word in positive_words if word in text)
 
         if negative_count > positive_count:
             sentiment = 'negative'
@@ -94,7 +95,9 @@ class TriageAgent:
 
         urgency_keywords = ['urgent', 'immediately', 'critical', 'emergency', 'asap',
                            'production', 'down', 'not working', 'broken', 'cant', 'cannot',
-                           'stopped working', 'crashed', 'error', 'failing']
+                           'stopped working', 'crashed', 'error', 'failing', 'charged',
+                           'double charged', 'cancelled', 'locked out', 'data loss',
+                           'security', 'breach', 'outage', 'unreachable', 'refund']
 
         found_keywords = [kw for kw in urgency_keywords if kw in text]
 
