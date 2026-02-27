@@ -1,15 +1,9 @@
-"""
-Comprehensive System Test - Validate All Components
-Tests: Elasticsearch, Data, Agent, Tools, Performance
-"""
-
 import os
 import sys
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
 
-# Add src to path
 sys.path.insert(0, 'src')
 from agent.triage_agent import TriageAgent
 
@@ -32,7 +26,7 @@ class SystemTester:
             self.failed_tests.append(name)
     
     def test_elasticsearch_connection(self):
-        """Test 1: Elasticsearch Connection"""
+        
         print("\n" + "="*60)
         print("TEST 1: ELASTICSEARCH CONNECTION")
         print("="*60)
@@ -59,7 +53,6 @@ class SystemTester:
                 self.log_test("Elasticsearch Connection", False, "Missing ELASTICSEARCH_URL")
                 return False
             
-            # Test ping
             if self.es.ping():
                 cluster_info = self.es.info()
                 self.log_test("Elasticsearch Connection", True, 
@@ -74,7 +67,7 @@ class SystemTester:
             return False
     
     def test_indices_exist(self):
-        """Test 2: All Required Indices Exist"""
+        
         print("\n" + "="*60)
         print("TEST 2: INDICES VALIDATION")
         print("="*60)
@@ -100,7 +93,7 @@ class SystemTester:
         return all_exist
     
     def test_data_quality(self):
-        """Test 3: Data Quality Validation"""
+        
         print("\n" + "="*60)
         print("TEST 3: DATA QUALITY")
         print("="*60)
@@ -109,7 +102,6 @@ class SystemTester:
         
         all_passed = True
         
-        # Test 3.1: Support Tickets
         try:
             tickets_response = self.es.search(index="support_tickets", body={"size": 1})
             if tickets_response['hits']['total']['value'] >= 500:
@@ -124,7 +116,6 @@ class SystemTester:
             self.log_test("Support Tickets Data", False, f"Error: {e}")
             all_passed = False
         
-        # Test 3.2: Customers
         try:
             customers_response = self.es.search(index="customers", body={"size": 1})
             if customers_response['hits']['total']['value'] >= 100:
@@ -139,7 +130,6 @@ class SystemTester:
             self.log_test("Customers Data", False, f"Error: {e}")
             all_passed = False
         
-        # Test 3.3: Knowledge Base
         try:
             kb_response = self.es.search(index="knowledge_base", body={"size": 1})
             if kb_response['hits']['total']['value'] >= 10:
@@ -157,7 +147,7 @@ class SystemTester:
         return all_passed
     
     def test_agent_initialization(self):
-        """Test 4: Agent Initialization"""
+        
         print("\n" + "="*60)
         print("TEST 4: AGENT INITIALIZATION")
         print("="*60)
@@ -173,7 +163,7 @@ class SystemTester:
             return False
     
     def test_search_tool(self):
-        """Test 5: Search Tool Functionality"""
+        
         print("\n" + "="*60)
         print("TEST 5: SEARCH TOOL (Elasticsearch Search)")
         print("="*60)
@@ -182,7 +172,7 @@ class SystemTester:
         assert self.agent is not None, "Agent not initialized"
         
         try:
-            # Get a sample ticket
+                                 
             response = self.es.search(index="support_tickets", body={"query": {"term": {"status": "open"}}, "size": 1})
             if response['hits']['total']['value'] == 0:
                 self.log_test("Search Tool - Get Open Ticket", False, "No open tickets found")
@@ -191,15 +181,12 @@ class SystemTester:
             ticket = response['hits']['hits'][0]['_source']
             self.log_test("Search Tool - Get Open Ticket", True, f"Found ticket {ticket['ticket_id']}")
             
-            # Test similar tickets search
             similar = self.agent._search_similar_tickets(ticket)
             self.log_test("Search Tool - Similar Tickets", True, f"Found {len(similar)} similar tickets")
             
-            # Test KB articles search
             kb_articles = self.agent._search_kb_articles(ticket)
             self.log_test("Search Tool - KB Articles", True, f"Found {len(kb_articles)} KB articles")
             
-            # Test customer history
             if ticket.get('customer_id'):
                 history = self.agent._get_customer_history(ticket['customer_id'])
                 self.log_test("Search Tool - Customer History", True, 
@@ -211,7 +198,7 @@ class SystemTester:
             return False
     
     def test_esql_tool(self):
-        """Test 6: ES|QL Tool Functionality"""
+        
         print("\n" + "="*60)
         print("TEST 6: ES|QL TOOL (Analytics & Aggregations)")
         print("="*60)
@@ -220,12 +207,11 @@ class SystemTester:
         assert self.agent is not None, "Agent not initialized"
         
         try:
-            # Test team workload aggregation
+                                            
             workload = self.agent._get_team_workload()
             self.log_test("ES|QL - Team Workload", len(workload) > 0, 
                         f"Analyzed workload for {len(workload)} teams")
             
-            # Test priority calculation
             response = self.es.search(index="support_tickets", body={"query": {"term": {"status": "open"}}, "size": 1})
             ticket = response['hits']['hits'][0]['_source']
             
@@ -243,7 +229,7 @@ class SystemTester:
             return False
     
     def test_workflow_tool(self):
-        """Test 7: Workflow Tool Functionality"""
+        
         print("\n" + "="*60)
         print("TEST 7: WORKFLOW TOOL (Updates & Actions)")
         print("="*60)
@@ -252,29 +238,24 @@ class SystemTester:
         assert self.agent is not None, "Agent not initialized"
         
         try:
-            # Get a ticket and triage it
+                                        
             response = self.es.search(index="support_tickets", body={"query": {"term": {"status": "open"}}, "size": 1})
             ticket = response['hits']['hits'][0]['_source']
             original_id = ticket['ticket_id']
             
-            # Triage the ticket (this will execute workflow)
             result = self.agent.triage_ticket(ticket)
             
-            # Verify workflow execution
             workflow_result = result['workflow_result']
             self.log_test("Workflow - Actions Executed", len(workflow_result['actions_taken']) > 0,
                         f"{len(workflow_result['actions_taken'])} actions taken")
             
-            # Verify ticket was updated in Elasticsearch
             updated_ticket = self.es.get(index="support_tickets", id=original_id)
             is_updated = updated_ticket['_source']['status'] == 'in_progress'
             self.log_test("Workflow - Ticket Updated", is_updated,
                         f"Ticket status changed to {updated_ticket['_source']['status']}")
             
-            # Refresh indices to ensure audit trail is immediately searchable
             self.es.indices.refresh(index="agent_actions")
             
-            # Verify action was logged
             action_response = self.es.search(
                 index="agent_actions",
                 body={"query": {"term": {"ticket_id": original_id}}, "size": 1, "sort": [{"timestamp": "desc"}]}
@@ -288,7 +269,7 @@ class SystemTester:
             return False
     
     def test_multi_step_reasoning(self):
-        """Test 8: Complete Multi-Step Reasoning"""
+        
         print("\n" + "="*60)
         print("TEST 8: MULTI-STEP REASONING (Full Pipeline)")
         print("="*60)
@@ -297,7 +278,7 @@ class SystemTester:
         assert self.agent is not None, "Agent not initialized"
         
         try:
-            # Get open tickets
+                              
             response = self.es.search(index="support_tickets", body={"query": {"term": {"status": "open"}}, "size": 3})
             tickets = [hit['_source'] for hit in response['hits']['hits']]
             
@@ -309,17 +290,16 @@ class SystemTester:
                 processing_time = (end - start).total_seconds() * 1000
                 
                 results.append({
-                    "ticket_id": ticket['ticket_id'],
-                    "processing_time": processing_time,
-                    "category": result['triage_decision']['category'],
-                    "confidence": result['triage_decision']['confidence']
+: ticket['ticket_id'],
+: processing_time,
+: result['triage_decision']['category'],
+: result['triage_decision']['confidence']
                 })
             
             avg_time = sum(r['processing_time'] for r in results) / len(results)
             self.log_test("Multi-Step Reasoning - Execution", True,
                         f"Triaged {len(results)} tickets in {avg_time:.0f}ms average")
             
-            # Verify all steps were executed
             sample = results[0]
             self.log_test("Multi-Step Reasoning - 5 Steps", True,
                         f"All steps completed for ticket {sample['ticket_id']}")
@@ -330,7 +310,7 @@ class SystemTester:
             return False
     
     def test_performance_metrics(self):
-        """Test 9: Performance Requirements"""
+        
         print("\n" + "="*60)
         print("TEST 9: PERFORMANCE METRICS")
         print("="*60)
@@ -339,7 +319,7 @@ class SystemTester:
         assert self.agent is not None, "Agent not initialized"
         
         try:
-            # Test processing speed
+                                   
             response = self.es.search(index="support_tickets", body={"query": {"term": {"status": "open"}}, "size": 5})
             tickets = [hit['_source'] for hit in response['hits']['hits']]
             
@@ -353,12 +333,10 @@ class SystemTester:
             avg_time = sum(times) / len(times)
             max_time = max(times)
             
-            # Performance requirement: < 5 seconds per ticket
             meets_performance = avg_time < 5000
             self.log_test("Performance - Speed", meets_performance,
                         f"Avg: {avg_time:.0f}ms, Max: {max_time:.0f}ms (Target: <5000ms)")
             
-            # Test accuracy (confidence scores)
             high_confidence = sum(1 for _ in range(len(tickets))) / len(tickets)
             self.log_test("Performance - Accuracy", True,
                         f"Processing {len(tickets)} tickets with multi-step reasoning")
@@ -369,7 +347,7 @@ class SystemTester:
             return False
     
     def test_error_handling(self):
-        """Test 10: Error Handling"""
+        
         print("\n" + "="*60)
         print("TEST 10: ERROR HANDLING")
         print("="*60)
@@ -377,35 +355,34 @@ class SystemTester:
         assert self.agent is not None, "Agent not initialized"
         
         try:
-            # Test with incomplete ticket
+                                         
             incomplete_ticket = {
-                "ticket_id": "TEST-INCOMPLETE",
-                "status": "open"
+: "TEST-INCOMPLETE",
+: "open"
             }
             result = self.agent.triage_ticket(incomplete_ticket)
             self.log_test("Error Handling - Incomplete Data", True,
-                        "Agent handled incomplete ticket gracefully")
+)
             
-            # Test with invalid customer ID
             invalid_ticket = {
-                "ticket_id": "TEST-INVALID",
-                "subject": "Test",
-                "description": "Test",
-                "customer_id": "NONEXISTENT",
-                "status": "open"
+: "TEST-INVALID",
+: "Test",
+: "Test",
+: "NONEXISTENT",
+: "open"
             }
             result = self.agent.triage_ticket(invalid_ticket)
             self.log_test("Error Handling - Invalid Customer", True,
-                        "Agent handled invalid customer ID gracefully")
+)
             
             return True
         except Exception as e:
-            # If it throws an error, that's actually a failure
+                                                              
             self.log_test("Error Handling", False, f"Agent crashed on bad data: {e}")
             return False
     
     def print_summary(self):
-        """Print Test Summary"""
+        
         print("\n" + "="*60)
         print("TEST SUMMARY")
         print("="*60)
@@ -443,45 +420,38 @@ def main():
     
     tester = SystemTester()
     
-    # Run all tests
     tests = [
         tester.test_elasticsearch_connection,
     ]
     
-    # Run connection test first
     for test in tests:
         try:
             test()
         except Exception as e:
             print(f"❌ CRITICAL ERROR in {test.__name__}: {e}")
     
-    # Validate Elasticsearch connection before continuing
     if tester.es is None:
         print("\n❌ CRITICAL: Elasticsearch connection failed - cannot continue tests")
         print("All tests passed: 1/10 (10.0%)")
         sys.exit(1)
     
-    # Continue with remaining tests
     tests = [
         tester.test_indices_exist,
         tester.test_data_quality,
         tester.test_agent_initialization,
     ]
     
-    # Run data validation and agent initialization
     for test in tests:
         try:
             test()
         except Exception as e:
             print(f"❌ CRITICAL ERROR in {test.__name__}: {e}")
     
-    # Validate agent initialization before continuing with agent tests
     if tester.agent is None:
         print("\n❌ CRITICAL: Agent initialization failed - cannot continue agent tests")
         tester.print_summary()
         sys.exit(1)
     
-    # Continue with agent-dependent tests
     tests = [
         tester.test_search_tool,
         tester.test_esql_tool,
@@ -497,7 +467,6 @@ def main():
         except Exception as e:
             print(f"❌ CRITICAL ERROR in {test.__name__}: {e}")
     
-    # Print summary
     all_passed = tester.print_summary()
     
     print(f"\nCompleted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")

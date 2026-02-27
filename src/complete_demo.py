@@ -1,7 +1,3 @@
-"""
-Complete Demo Runner - Run all demonstrations
-"""
-
 import os
 import sys
 from elasticsearch import Elasticsearch
@@ -9,7 +5,6 @@ from dotenv import load_dotenv
 import time
 from datetime import datetime
 
-# Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from agent.triage_agent import TriageAgent
@@ -17,16 +12,14 @@ from metrics_dashboard import MetricsDashboard
 
 load_dotenv()
 
-
 def print_banner(text):
-    """Print a fancy banner"""
+    
     print("\n" + "="*80)
     print(f"  {text}")
     print("="*80 + "\n")
 
-
 def connect_to_elasticsearch():
-    """Connect to Elasticsearch"""
+    
     print_banner("🔌 CONNECTING TO ELASTICSEARCH")
     
     if os.getenv('ELASTICSEARCH_URL'):
@@ -60,9 +53,8 @@ def connect_to_elasticsearch():
     else:
         raise ConnectionError("Failed to connect to Elasticsearch")
 
-
 def show_data_statistics(es):
-    """Show statistics about loaded data"""
+    
     print_banner("📊 DATA STATISTICS")
     
     indices = ["support_tickets", "customers", "knowledge_base", "agent_actions"]
@@ -76,24 +68,22 @@ def show_data_statistics(es):
     
     print()
 
-
 def demo_single_ticket(es, agent):
-    """Demo triaging a single ticket with explanation"""
+    
     print_banner("🎯 DEMO: Single Ticket Triage with Explanation")
     
-    # Get one interesting ticket (with urgency)
     response = es.search(
         index="support_tickets",
         body={
-            "query": {
-                "bool": {
-                    "must": [
+: {
+: {
+: [
                         {"term": {"status": "open"}},
                         {"range": {"urgency_score": {"gte": 30}}}
                     ]
                 }
             },
-            "size": 1
+: 1
         }
     )
     
@@ -123,9 +113,8 @@ def demo_single_ticket(es, agent):
         print("-" * 80)
         print()
 
-
 def demo_batch_processing(es, agent):
-    """Demo processing multiple tickets"""
+    
     print_banner("⚡ DEMO: Batch Processing (10 Tickets)")
     
     response = es.search(
@@ -150,14 +139,12 @@ def demo_batch_processing(es, agent):
         result['processing_time_ms'] = int((end_time - start_time) * 1000)
         results.append(result)
         
-        # Print quick summary
         decision = result['triage_decision']
         print(f"       → {decision['category']} | {decision['priority']} | {decision['assigned_team']} ({decision['confidence']:.0%})")
         print()
     
     total_end = time.time()
     
-    # Summary
     print("\n" + "="*80)
     print("📊 BATCH PROCESSING SUMMARY")
     print("="*80)
@@ -170,7 +157,6 @@ def demo_batch_processing(es, agent):
     print(f"Total processing time:   {total_time:.0f}ms")
     print(f"Throughput:              {len(results) / (total_time/1000):.1f} tickets/second")
     
-    # Confidence distribution
     high_conf = sum(1 for r in results if r['triage_decision']['confidence'] >= 0.9)
     medium_conf = sum(1 for r in results if 0.7 <= r['triage_decision']['confidence'] < 0.9)
     low_conf = sum(1 for r in results if r['triage_decision']['confidence'] < 0.7)
@@ -180,7 +166,6 @@ def demo_batch_processing(es, agent):
     print(f"   Medium (70-90%): {medium_conf} tickets")
     print(f"   Low (<70%):     {low_conf} tickets (flagged for review)")
     
-    # Category distribution
     categories = {}
     for r in results:
         cat = r['triage_decision']['category']
@@ -192,15 +177,13 @@ def demo_batch_processing(es, agent):
     
     print()
 
-
 def show_impact_comparison(es):
-    """Show before/after comparison"""
+    
     print_banner("📊 BEFORE/AFTER COMPARISON")
     
     total_tickets = es.count(index="support_tickets")["count"]
     triaged_tickets = es.count(index="agent_actions")["count"]
     
-    # Manual vs Agent
     print("┌─────────────────────┬──────────────────┬──────────────────┐")
     print("│ Metric              │   Manual Triage  │   Agent Triage   │")
     print("├─────────────────────┼──────────────────┼──────────────────┤")
@@ -219,9 +202,8 @@ def show_impact_comparison(es):
     print(f"   Errors reduced: 67% fewer miscategorizations")
     print()
 
-
 def main():
-    """Run complete demonstration"""
+    
     print("\n" + "🎬 "*20)
     print("    INTELLIGENT SUPPORT TICKET TRIAGE AGENT")
     print("    Complete Demonstration")
@@ -229,15 +211,13 @@ def main():
     print("🎬 "*20 + "\n")
     
     try:
-        # Connect
+                 
         es = connect_to_elasticsearch()
         
-        # Show data stats
         show_data_statistics(es)
         
         input("Press ENTER to continue...")
         
-        # Create agent
         print_banner("🤖 INITIALIZING TRIAGE AGENT")
         agent = TriageAgent(es)
         print("✅ Agent initialized with multi-step reasoning enabled")
@@ -248,22 +228,18 @@ def main():
         
         input("Press ENTER to start demos...")
         
-        # Demo 1: Single ticket with explanation
         demo_single_ticket(es, agent)
         
         input("Press ENTER for batch processing demo...")
         
-        # Demo 2: Batch processing
         demo_batch_processing(es, agent)
         
         input("Press ENTER to see impact comparison...")
         
-        # Show comparison
         show_impact_comparison(es)
         
         input("Press ENTER to generate full metrics dashboard...")
         
-        # Generate metrics dashboard
         print_banner("📊 GENERATING METRICS DASHBOARD")
         dashboard = MetricsDashboard(es)
         report = dashboard.generate_report()
@@ -293,7 +269,6 @@ def main():
     except Exception as e:
         print(f"\n\n❌ Error: {e}")
         raise
-
 
 if __name__ == "__main__":
     main()

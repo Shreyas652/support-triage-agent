@@ -1,36 +1,14 @@
-"""
-Elasticsearch Integration
-Handle Elasticsearch connections, indices, and operations
-"""
-
 from elasticsearch import Elasticsearch
 from typing import Dict, Any, List
 
 class ElasticsearchManager:
-    """
-    Manages Elasticsearch operations and indices
-    """
     
     def __init__(self, client: Elasticsearch):
-        """
-        Initialize the Elasticsearch manager
         
-        Args:
-            client: Elasticsearch client instance
-        """
         self.es = client
         
     def create_index(self, index_name: str, mappings: Dict[str, Any] = None) -> bool:
-        """
-        Create an Elasticsearch index
         
-        Args:
-            index_name: Name of the index to create
-            mappings: Optional index mappings
-            
-        Returns:
-            True if successful, False otherwise
-        """
         try:
             if self.es.indices.exists(index=index_name):
                 print(f"ℹ️  Index '{index_name}' already exists")
@@ -48,17 +26,7 @@ class ElasticsearchManager:
             return False
             
     def index_document(self, index_name: str, document: Dict[str, Any], doc_id: str = None) -> bool:
-        """
-        Index a document in Elasticsearch
         
-        Args:
-            index_name: Name of the index
-            document: Document to index
-            doc_id: Optional document ID
-            
-        Returns:
-            True if successful, False otherwise
-        """
         try:
             if doc_id:
                 self.es.index(index=index_name, id=doc_id, body=document)
@@ -70,22 +38,13 @@ class ElasticsearchManager:
             return False
             
     def bulk_index(self, index_name: str, documents: List[Dict[str, Any]]) -> int:
-        """
-        Bulk index multiple documents
         
-        Args:
-            index_name: Name of the index
-            documents: List of documents to index
-            
-        Returns:
-            Number of successfully indexed documents
-        """
         from elasticsearch.helpers import bulk
         
         actions = [
             {
-                "_index": index_name,
-                "_source": doc
+: index_name,
+: doc
             }
             for doc in documents
         ]
@@ -101,17 +60,7 @@ class ElasticsearchManager:
             return 0
             
     def search(self, index_name: str, query: Dict[str, Any], size: int = 10) -> List[Dict[str, Any]]:
-        """
-        Search for documents
         
-        Args:
-            index_name: Name of the index to search
-            query: Elasticsearch query
-            size: Maximum number of results
-            
-        Returns:
-            List of matching documents
-        """
         try:
             response = self.es.search(
                 index=index_name,
@@ -123,15 +72,7 @@ class ElasticsearchManager:
             return []
             
     def delete_index(self, index_name: str) -> bool:
-        """
-        Delete an index
         
-        Args:
-            index_name: Name of the index to delete
-            
-        Returns:
-            True if successful, False otherwise
-        """
         try:
             if self.es.indices.exists(index=index_name):
                 self.es.indices.delete(index=index_name)
@@ -144,27 +85,26 @@ class ElasticsearchManager:
             print(f"❌ Error deleting index: {e}")
             return False
 
-# Example index mappings
 EXAMPLE_MAPPINGS = {
-    "tasks": {
-        "properties": {
-            "task_id": {"type": "keyword"},
-            "title": {"type": "text"},
-            "description": {"type": "text"},
-            "status": {"type": "keyword"},
-            "priority": {"type": "integer"},
-            "created_at": {"type": "date"},
-            "updated_at": {"type": "date"},
-            "tags": {"type": "keyword"}
+: {
+: {
+: {"type": "keyword"},
+: {"type": "text"},
+: {"type": "text"},
+: {"type": "keyword"},
+: {"type": "integer"},
+: {"type": "date"},
+: {"type": "date"},
+: {"type": "keyword"}
         }
     },
-    "logs": {
-        "properties": {
-            "timestamp": {"type": "date"},
-            "level": {"type": "keyword"},
-            "message": {"type": "text"},
-            "source": {"type": "keyword"},
-            "metadata": {"type": "object"}
+: {
+: {
+: {"type": "date"},
+: {"type": "keyword"},
+: {"type": "text"},
+: {"type": "keyword"},
+: {"type": "object"}
         }
     }
 }
