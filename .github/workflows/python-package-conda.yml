@@ -31,4 +31,4 @@ jobs:
     - name: Test with pytest
       run: |
         conda install pytest -y
-        python -m pytest test_ci.py -v
+        python -m pytest tests/test_ci.py -v

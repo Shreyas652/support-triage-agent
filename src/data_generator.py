@@ -220,7 +220,7 @@ class SupportDataGenerator:
             
             # Create ticket
             created_at = datetime.now() - timedelta(
-                hours=random.randint(0, 168)  # Last 7 days
+                hours=random.randint(0, 2160)  # Last 90 days
             )
             
             ticket = {
