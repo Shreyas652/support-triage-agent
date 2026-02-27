@@ -482,17 +482,24 @@ def main():
 
     agent = TriageAgent(es)
 
+    priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+
     response = es.search(
         index="support_tickets",
         body={
             "query": {"term": {"status": "open"}},
-            "size": 3
+            "size": 50
         }
     )
 
-    tickets = [hit["_source"] for hit in response["hits"]["hits"]]
+    all_tickets = [hit["_source"] for hit in response["hits"]["hits"]]
+    tickets = sorted(all_tickets, key=lambda t: priority_order.get(t.get("priority", "low"), 3))[:10]
 
-    print(f"Found {len(tickets)} open tickets to triage\n")
+    print(f"Found {len(all_tickets)} open tickets — processing top 10 by priority\n")
+    print("Queue order:")
+    for i, t in enumerate(tickets, 1):
+        print(f"  {i:2}. [{t.get('priority','?').upper():8}] {t['ticket_id']} - {t['subject'][:50]}")
+    print()
 
     results = []
     for ticket in tickets:
@@ -507,7 +514,10 @@ def main():
     print("TRIAGE SUMMARY")
     print("="*60)
 
+    priority_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
     for result in results:
+        p = result['triage_decision']['priority']
+        priority_counts[p] = priority_counts.get(p, 0) + 1
         print(f"\nTicket {result['ticket_id']}:")
         print(f"  Category: {result['triage_decision']['category']} (confidence: {result['triage_decision']['confidence']:.1%})")
         print(f"  Priority: {result['triage_decision']['priority']}")
@@ -517,8 +527,10 @@ def main():
             print(f"  [REVIEW REQUIRED] Flagged for human review")
 
     avg_time = sum(r['processing_time_ms'] for r in results) / len(results)
-    print(f"\n Average processing time: {avg_time:.0f}ms")
-    print(f"\n[SUCCESS] All tickets triaged successfully!")
+    print(f"\n{'='*60}")
+    print(f"Priority Breakdown: Critical={priority_counts['critical']} | High={priority_counts['high']} | Medium={priority_counts['medium']} | Low={priority_counts['low']}")
+    print(f"Average processing time: {avg_time:.0f}ms")
+    print(f"[SUCCESS] {len(results)} tickets triaged successfully!")
 
 if __name__ == "__main__":
     main()
